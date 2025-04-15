@@ -1,9 +1,7 @@
-// test.js
-
 import chai from 'chai';
 import chaiHttp from 'chai-http';
 import mongoose from 'mongoose';
-import app from './server.js'; // Make sure server.js also uses export default
+import app from './server.js';
 
 chai.use(chaiHttp);
 const { expect } = chai;
