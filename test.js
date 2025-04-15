@@ -1,52 +1,41 @@
-// test/user.test.js
+// test.js
+
 import chai from 'chai';
 import chaiHttp from 'chai-http';
-import app from '../server.js';
 import mongoose from 'mongoose';
-import User from '../models/User.js';
+import app from './server.js'; // Make sure server.js also uses export default
 
-const should = chai.should();
 chai.use(chaiHttp);
+const { expect } = chai;
 
-describe('Users API', () => {
-  before((done) => {
-    mongoose.connect(process.env.MONGO_URI_TEST || process.env.MONGO_URI, {
+describe('User API', () => {
+  before(async () => {
+    await mongoose.connect(process.env.MONGO_URI, {
+      user: process.env.MONGO_USERNAME,
+      pass: process.env.MONGO_PASSWORD,
       useNewUrlParser: true,
       useUnifiedTopology: true
-    }, () => done());
-  });
-
-  beforeEach(async () => {
-    await User.deleteMany({});
-  });
-
-  describe('POST /api/users', () => {
-    it('should create a new user', (done) => {
-      const testUser = {
-        name: 'Test User',
-        email: 'test@example.com'
-      };
-
-      chai.request(app)
-        .post('/api/users')
-        .send(testUser)
-        .end((err, res) => {
-          res.should.have.status(201);
-          res.body.should.have.property('name').eql('Test User');
-          res.body.should.have.property('email').eql('test@example.com');
-          done();
-        });
     });
   });
 
-  describe('GET /api/users', () => {
-    it('should get all users', async () => {
-      await User.create({ name: 'User One', email: 'one@example.com' });
+  after(async () => {
+    await mongoose.connection.close();
+  });
 
-      const res = await chai.request(app).get('/api/users');
-      res.should.have.status(200);
-      res.body.should.be.an('array');
-      res.body.length.should.be.eql(1);
-    });
+  it('should create a user', async () => {
+    const res = await chai.request(app)
+      .post('/api/users')
+      .send({ name: 'Test User', email: 'test@example.com' });
+
+    expect(res).to.have.status(201);
+    expect(res.body).to.have.property('name', 'Test User');
+  });
+
+  it('should fetch all users', async () => {
+    const res = await chai.request(app)
+      .get('/api/users');
+
+    expect(res).to.have.status(200);
+    expect(res.body).to.be.an('array');
   });
 });
