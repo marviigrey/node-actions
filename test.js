@@ -1,7 +1,8 @@
 import chai from 'chai';
 import chaiHttp from 'chai-http';
 import mongoose from 'mongoose';
-import app from './server.js';
+import app from './app.js';
+import User from './models/User.js';
 
 chai.use(chaiHttp);
 const { expect } = chai;
@@ -11,29 +12,28 @@ describe('User API', () => {
     await mongoose.connect(process.env.MONGO_URI, {
       user: process.env.MONGO_USERNAME,
       pass: process.env.MONGO_PASSWORD,
-      useNewUrlParser: true,
-      useUnifiedTopology: true
     });
   });
 
+  beforeEach(async () => {
+    await User.deleteMany({});
+  });
+
   after(async () => {
-    await mongoose.connection.close();
+    await mongoose.disconnect();
   });
 
   it('should create a user', async () => {
-    const res = await chai.request(app)
-      .post('/api/users')
-      .send({ name: 'Test User', email: 'test@example.com' });
-
+    const res = await chai.request(app).post('/api/users').send({ name: 'Alice' });
     expect(res).to.have.status(201);
-    expect(res.body).to.have.property('name', 'Test User');
+    expect(res.body).to.have.property('name', 'Alice');
   });
 
   it('should fetch all users', async () => {
-    const res = await chai.request(app)
-      .get('/api/users');
-
+    await new User({ name: 'Bob' }).save();
+    const res = await chai.request(app).get('/api/users');
     expect(res).to.have.status(200);
-    expect(res.body).to.be.an('array');
+    expect(res.body.length).to.equal(1);
+    expect(res.body[0].name).to.equal('Bob');
   });
 });
