@@ -1,0 +1,7 @@
+{
+    "extension": ["js"],
+    "spec": "test.js",
+    "loader": "esm",
+    "timeout": 5000
+  }
+  
