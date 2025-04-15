@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Mongo User App</title>
+</head>
+<body>
+  <h1>User App</h1>
+  <form id="userForm">
+    <input type="text" id="name" placeholder="Name" required />
+    <input type="email" id="email" placeholder="Email" required />
+    <button type="submit">Submit</button>
+  </form>
+  <ul id="userList"></ul>
+
+  <script>
+    const form = document.getElementById('userForm');
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const name = document.getElementById('name').value;
+      const email = document.getElementById('email').value;
+
+      const res = await fetch('/api/users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email })
+      });
+
+      const user = await res.json();
+      alert('User Added: ' + user.name);
+    });
+
+    async function fetchUsers() {
+      const res = await fetch('/api/users');
+      const users = await res.json();
+      const list = document.getElementById('userList');
+      list.innerHTML = users.map(u => `<li>${u.name} (${u.email})</li>`).join('');
+    }
+
+    fetchUsers();
+  </script>
+</body>
+</html>
