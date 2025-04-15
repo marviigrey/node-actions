@@ -1,5 +1,5 @@
 ---
-    name: Solar System Workflow
+    name: node app Workflow
     on:
       workflow_dispatch: null
       push:
