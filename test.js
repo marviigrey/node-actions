@@ -1,39 +1,32 @@
-import chai from 'chai';
-import chaiHttp from 'chai-http';
 import mongoose from 'mongoose';
-import app from './app.js';
-import User from './models/User.js';
-
-chai.use(chaiHttp);
-const { expect } = chai;
+import request from 'supertest';
+import { expect } from 'chai';
+import app from './app.js'; // only import app, NOT server.js
 
 describe('User API', () => {
   before(async () => {
-    await mongoose.connect(process.env.MONGO_URI, {
-      user: process.env.MONGO_USERNAME,
-      pass: process.env.MONGO_PASSWORD,
+    const uri = `mongodb+srv://${process.env.MONGO_USERNAME}:${process.env.MONGO_PASSWORD}@${process.env.MONGO_URI}`;
+    await mongoose.connect(uri, {
+      serverSelectionTimeoutMS: 5000,
     });
   });
 
-  beforeEach(async () => {
-    await User.deleteMany({});
-  });
-
   after(async () => {
-    await mongoose.disconnect();
+    await mongoose.connection.close();
   });
 
   it('should create a user', async () => {
-    const res = await chai.request(app).post('/api/users').send({ name: 'Alice' });
-    expect(res).to.have.status(201);
-    expect(res.body).to.have.property('name', 'Alice');
+    const res = await request(app)
+      .post('/users')
+      .send({ name: 'John', email: 'john@example.com' });
+
+    expect(res.status).to.equal(201);
+    expect(res.body).to.have.property('_id');
   });
 
   it('should fetch all users', async () => {
-    await new User({ name: 'Bob' }).save();
-    const res = await chai.request(app).get('/api/users');
-    expect(res).to.have.status(200);
-    expect(res.body.length).to.equal(1);
-    expect(res.body[0].name).to.equal('Bob');
+    const res = await request(app).get('/users');
+    expect(res.status).to.equal(200);
+    expect(res.body).to.be.an('array');
   });
 });

@@ -1,25 +1,20 @@
+// app.js
 import express from 'express';
 import mongoose from 'mongoose';
-import cors from 'cors';
 import bodyParser from 'body-parser';
-import userRoutes from './routes/user.js';
+import User from './models/User.js';
 
 const app = express();
-const isTest = process.env.NODE_ENV === 'test';
-
-app.use(cors());
 app.use(bodyParser.json());
-app.use('/api/users', userRoutes);
 
-if (!isTest) {
-  mongoose.connect(process.env.MONGO_URI, {
-    user: process.env.MONGO_USERNAME,
-    pass: process.env.MONGO_PASSWORD,
-  }).then(() => {
-    console.log("MongoDB connected");
-  }).catch(err => {
-    console.error("MongoDB connection error:", err);
-  });
-}
+app.post('/users', async (req, res) => {
+  const user = await User.create(req.body);
+  res.status(201).json(user);
+});
+
+app.get('/users', async (req, res) => {
+  const users = await User.find();
+  res.status(200).json(users);
+});
 
 export default app;
